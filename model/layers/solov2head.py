@@ -321,7 +321,7 @@ class SOLOV2Head(tf.keras.layers.Layer):
                 continue
             gt_bboxes = gt_bboxes_raw[hit_indices]
             gt_labels = gt_labels_raw[hit_indices]
-            gt_masks = gt_masks_raw[hit_indices.cpu().numpy(), ...]
+            gt_masks = gt_masks_raw[hit_indices.numpy(), ...]
 
             half_ws = 0.5 * (gt_bboxes[:, 2] - gt_bboxes[:, 0]) * self.sigma
             half_hs = 0.5 * (gt_bboxes[:, 3] - gt_bboxes[:, 1]) * self.sigma
