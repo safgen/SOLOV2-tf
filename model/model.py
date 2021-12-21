@@ -35,20 +35,20 @@ class SOLO(tf.keras.Model):
                             out_channels=128,
                             start_level=0,
                             end_level=3,
-                            nums=576)
+                            nums=128)
         self.solo_head = SOLOV2Head(num_classes=2,
                             in_channels=256,
                             seg_feat_channels=256,
                             stacked_convs=4,
                             strides=[8, 8, 16, 32, 32],
-                            scale_ranges=((1, 56), (28, 112), (56, 224)),
+                            scale_ranges=((1, 56), (28, 112), (56, 224), (112, 448), (224, 896)),
                             num_grids=grid_sizes,
                             ins_out_channels=128
                         )
         # self.bbox_head = DecoupledSOLOHead()
 
 
-    def call(self, input, training=False):
+    def call(self, input, gt_bboxes, gt_labels, gt_masks, training=False):
         c2, c3, c4, c5 = self.backbone(input, training=training)
 
         Px = self.fpn([c2, c3, c4, c5])
@@ -57,13 +57,19 @@ class SOLO(tf.keras.Model):
         mask_out = self.mask_head(Px[self.mask_head.
                   start_level:self.mask_head.end_level + 1])
 
-        cate = []
-        kern = []
-        for cat, k in zip(cate_out, kern_out):
-            cate.append(cat)
-            kern.append(k)
+        loss_inputs = cate_out, kern_out, mask_out, gt_bboxes, gt_labels, gt_masks
+        # print(loss_inputs.shape   )
+        losses = self.solo_head.loss(
+            *loss_inputs)
+        return losses
 
-        return cate, kern, mask_out 
+        # cate = []
+        # kern = []
+        # for cat, k in zip(cate_out, kern_out):
+        #     cate.append(cat)
+        #     kern.append(k)
+
+        return cate_out, kern_out, mask_out 
         
       
 

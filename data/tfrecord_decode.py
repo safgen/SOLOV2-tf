@@ -4,6 +4,7 @@ import os
 import data.augmentation as aug
 
 
+
 class Parser(object):
     """A class to decode data and preprocessing from tfrecord file"""
     def __init__(self, input_size, grid_number, num_class, mode='train'):

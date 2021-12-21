@@ -139,7 +139,6 @@ class DiceLoss(tf.keras.losses.Loss):
         self.keepdims = keepdims
 
     def call(self, y_true, y_pred):
-        y_true = tf.image.resize(y_true, [56, 56])
         pq = tf.math.reduce_sum(tf.math.multiply(y_pred, y_true), axis=[1,2], keepdims=self.keepdims)
         p2 = tf.math.reduce_sum(tf.math.multiply(y_pred, y_pred), axis=[1,2], keepdims=self.keepdims)
         q2 = tf.math.reduce_sum(tf.math.multiply(y_true, y_true), axis=[1,2], keepdims=self.keepdims)

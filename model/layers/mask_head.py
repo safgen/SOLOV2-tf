@@ -4,7 +4,8 @@ from tensorflow.python.keras import Sequential
 import tensorflow.keras.backend as K
 import numpy as np
 import tensorflow.keras.layers as layers
-from model.layers.custom_layers import Resize, GroupNormalization
+from model.layers.custom_layers import  GroupNormalization
+from model.layers.coordconv import CoordConv2D
 
 
 class MaskFeatHead(layers.Layer):
@@ -26,6 +27,10 @@ class MaskFeatHead(layers.Layer):
         self.num_classes = nums
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
+
+        self.coordconv = CoordConv2D(filters=self.out_channels, kernel_size=(3,3), strides=1, padding="same",
+                                    kernel_initializer=tf.keras.initializers.glorot_uniform(),
+                                    activation="relu")
 
         self.convs_all_levels = []
         for i in range(self.start_level, self.end_level + 1):
@@ -98,14 +103,14 @@ class MaskFeatHead(layers.Layer):
         for i in range(1, len(inputs)):
             input_p = inputs[i]
             if i == 3:
-                input_feat = input_p
-                x_range = tf.linspace(-1, 1, input_feat.shape[-1])
-                y_range = tf.linspace(-1, 1, input_feat.shape[-2])
-                y, x = tf.meshgrid(y_range, x_range)
-                y = tf.broadcast_to(y, [input_feat.shape[0], 1, -1, -1])
-                x = tf.broadcast_to(x, [input_feat.shape[0], 1, -1, -1])
-                coord_feat = tf.cast(tf.concat([x, y], 1), dtype = tf.float32)
-                input_p = tf.concat([input_p, coord_feat], 1)
+                input_p = self.coordconv(input_p)
+                # x_range = tf.linspace(-1, 1, input_feat.shape[-1])
+                # y_range = tf.linspace(-1, 1, input_feat.shape[-2])
+                # y, x = tf.meshgrid(y_range, x_range)
+                # y = tf.broadcast_to(y, [input_feat.shape[0], 1, -1, -1])
+                # x = tf.broadcast_to(x, [input_feat.shape[0], 1, -1, -1])
+                # coord_feat = tf.cast(tf.concat([x, y], 1), dtype = tf.float32)
+                # input_p = tf.concat([input_p, coord_feat], 1)
                 
             feature_add_all_level += self.convs_all_levels[i](input_p)
         

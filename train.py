@@ -11,17 +11,18 @@ from tensorflow.keras.utils import Progbar
 
 tf.config.run_functions_eagerly(False)   # for debugging
 
+#TODO update dataloader to generate data compatable with new direct loss computation approach
 @tf.function
 def train_step(model, optimizer, loss_fn, image, cat_true, mask_true, cat_metric, mask_metric=None):
     with tf.GradientTape() as tape:
-        cat_pred, kern_pred , mask_pred = model(image, training=True)
+        total_loss, l_cate, l_mask = model(image, None, cat_true, mask_true, training=True)
       
-        total_loss, l_cate, l_mask = loss_fn((cat_true, mask_true), (cat_pred, mask_pred))
+        # total_loss, l_cate, l_mask = loss_fn((cat_true, mask_true), (cat_pred, mask_pred))
     gradients = tape.gradient(total_loss, model.trainable_variables, 
                 unconnected_gradients=tf.UnconnectedGradients.ZERO)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-    cat_metric.update_state(cat_true, cat_pred)
+    # cat_metric.update_state(cat_true, cat_pred)
     # mask_metric.update_state(mask_true, mask_pred)
 
     return total_loss, l_cate, l_mask
@@ -29,10 +30,10 @@ def train_step(model, optimizer, loss_fn, image, cat_true, mask_true, cat_metric
 
 @tf.function
 def test_step(model, loss_fn, image, cat_true, mask_true, cat_metric, mask_metric=None):
-    cat_pred, mask_pred = model(image, training=False)
+    cat_pred, kern_pred, mask_pred = model(image, training=False)
     total_loss, l_cate, l_mask = loss_fn((cat_true, mask_true), (cat_pred, mask_pred))
 
-    cat_metric.update_state(cat_true, cat_pred)
+    # cat_metric.update_state(cat_true, cat_pred)
     # mask_metric.update_state(mask_true, mask_pred)
 
     return total_loss, l_cate, l_mask
@@ -63,7 +64,7 @@ def main():
     lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(boundaries=tf.math.multiply(TRAINING_PARAMETERS['epochs'], TRAINING_PARAMETERS['steps_per_epoch']),
                                                                        values=tf.constant(TRAINING_PARAMETERS['learning_rates']))
     optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=TRAINING_PARAMETERS['momentum'])
-    # optimizer = tf.keras.optimizers.Adam()
+    optimizer = tf.keras.optimizers.Adam()
     loss_fn = SOLOLoss()
 
     # Load data
@@ -80,6 +81,7 @@ def main():
                                                num_epoch=TRAINING_PARAMETERS['num_epoch'])
     val_dataset = val_parser.build_dataset(args.dataset_val)
 
+ 
     # Load/create Checkpoint
     ckpt = tf.train.Checkpoint(step=tf.Variable(-1, trainable=False, dtype=tf.int64),
                                optimizer=optimizer,
