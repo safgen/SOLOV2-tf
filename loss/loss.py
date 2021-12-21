@@ -79,7 +79,7 @@ class SOLOMaskLoss(tf.keras.losses.Loss):
             raise ValueError('Mask distance type not supported')
 
     def call(self, y_true, y_pred):
-        d_mask = self.mask_loss(y_true, y_pred)                                 
+        d_mask = self.mask_loss(y_true, y_pred)     
         d_mask = tf.math.reduce_mean(d_mask, axis=[1,2])
         indicator = tf.cast(tf.math.reduce_sum(y_true, axis=[1,2]) > 0, tf.float32)
         n_pos = tf.math.reduce_sum(indicator, axis=1)
@@ -139,10 +139,11 @@ class DiceLoss(tf.keras.losses.Loss):
         self.keepdims = keepdims
 
     def call(self, y_true, y_pred):
+        y_true = tf.image.resize(y_true, [56, 56])
         pq = tf.math.reduce_sum(tf.math.multiply(y_pred, y_true), axis=[1,2], keepdims=self.keepdims)
         p2 = tf.math.reduce_sum(tf.math.multiply(y_pred, y_pred), axis=[1,2], keepdims=self.keepdims)
         q2 = tf.math.reduce_sum(tf.math.multiply(y_true, y_true), axis=[1,2], keepdims=self.keepdims)
-        return tf.squeeze(1 - 2 * pq / (p2 + q2))   # shape (B, 1, 1, S^2) if keepdims else (B, S^2)
+        return 1 - 2 * pq / (p2 + q2)   # shape (B, 1, 1, S^2) if keepdims else (B, S^2)
 
     def get_config(self):
         config = super(DiceLoss, self).get_config()

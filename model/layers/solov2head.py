@@ -96,7 +96,7 @@ class SOLOV2Head(tf.keras.layers.Layer):
             chn = self.in_channels + 2 if i == 0 else self.seg_feat_channels
             self.kernel_convs.append(Sequential([
                 layers.Conv2D(
-                    self.seg_feat_channels,
+                    chn,
                     3,
                     strides=1,
                     padding='same'
@@ -113,7 +113,7 @@ class SOLOV2Head(tf.keras.layers.Layer):
             chn = self.in_channels if i == 0 else self.seg_feat_channels
             self.cate_convs.append(Sequential([
                 layers.Conv2D(
-                    self.seg_feat_channels,
+                    chn ,
                     3,
                     strides=1,
                     padding='same'
@@ -167,17 +167,17 @@ class SOLOV2Head(tf.keras.layers.Layer):
         seg_num_grid = self.seg_num_grids[idx]  
         kernel_feat = tf.image.resize(kernel_feat, [seg_num_grid, seg_num_grid])
         
-        cate_feat = kernel_feat[:, :-2, :, :]
+        cate_feat = kernel_feat
 
         for i, kernel_layer in enumerate(self.kernel_convs):
             kernel_feat = kernel_layer(kernel_feat)
-        kernel_pred = self.solo_kernel(kernel_feat)    #TODO 
+        kernel_pred = self.solo_kernel(kernel_feat)    
 
         # cate branch
         for i, cate_layer in enumerate(self.cate_convs):
             cate_feat = cate_layer(cate_feat)
         cate_pred = self.solo_cate(cate_feat)
-
+       
         if eval:
             cate_pred = points_nms(cate_pred.sigmoid(), kernel=2).permute(0, 2, 3, 1)
         return cate_pred, kernel_pred

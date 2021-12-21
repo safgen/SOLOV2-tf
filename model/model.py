@@ -23,7 +23,7 @@ class SOLO(tf.keras.Model):
             base_model = tf.keras.applications.ResNet50(input_shape=(input_size, input_size, 3),
                                                         include_top=False,
                                                         layers=tf.keras.layers,
-                                                        weights=None)
+                                                        weights='imagenet')
 
         else:
             raise NotImplementedError('Backbone %s not supported' % (backbone))
@@ -35,7 +35,7 @@ class SOLO(tf.keras.Model):
                             out_channels=128,
                             start_level=0,
                             end_level=3,
-                            nums=256)
+                            nums=576)
         self.solo_head = SOLOV2Head(num_classes=2,
                             in_channels=256,
                             seg_feat_channels=256,
@@ -56,8 +56,7 @@ class SOLO(tf.keras.Model):
         cate_out, kern_out = self.solo_head(Px, None)
         mask_out = self.mask_head(Px[self.mask_head.
                   start_level:self.mask_head.end_level + 1])
-        print("...............................................................................................")
-        print (cate_out + kern_out + mask_out)
+
         cate = []
         kern = []
         for cat, k in zip(cate_out, kern_out):

@@ -91,7 +91,7 @@ class MaskFeatHead(layers.Layer):
         ])
 
    
-    def forward(self, inputs):
+    def call(self, inputs):
         assert len(inputs) == (self.end_level - self.start_level + 1)
 
         feature_add_all_level = self.convs_all_levels[0](inputs[0])
@@ -108,6 +108,6 @@ class MaskFeatHead(layers.Layer):
                 input_p = tf.concat([input_p, coord_feat], 1)
                 
             feature_add_all_level += self.convs_all_levels[i](input_p)
-
+        
         feature_pred = self.conv_pred(feature_add_all_level)
         return feature_pred

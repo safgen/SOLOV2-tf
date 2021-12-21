@@ -15,8 +15,10 @@ tf.config.run_functions_eagerly(False)   # for debugging
 def train_step(model, optimizer, loss_fn, image, cat_true, mask_true, cat_metric, mask_metric=None):
     with tf.GradientTape() as tape:
         cat_pred, kern_pred , mask_pred = model(image, training=True)
+      
         total_loss, l_cate, l_mask = loss_fn((cat_true, mask_true), (cat_pred, mask_pred))
-    gradients = tape.gradient(total_loss, model.trainable_variables)
+    gradients = tape.gradient(total_loss, model.trainable_variables, 
+                unconnected_gradients=tf.UnconnectedGradients.ZERO)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
     cat_metric.update_state(cat_true, cat_pred)
@@ -116,7 +118,7 @@ def main():
 
     # Start training
     for image, cat_true, mask_true in train_dataset:
-        print(image.shape)
+        # print(image.shape)
         ckpt.step.assign_add(1)
         if step > TRAINING_PARAMETERS["num_epoch"]*TRAINING_PARAMETERS["steps_per_epoch"]:
             break
