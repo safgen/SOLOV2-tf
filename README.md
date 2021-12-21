@@ -24,3 +24,8 @@ python tfrecord_creator_coco.py --annotation path/to/instances_val2017.json --im
  ```bash
  python train.py --dataset_train ds/train/ --dataset_val ds/val/
  ```
+## Methodology
+As per the SOLOv2 paper, the model consists of an FPN with a ResNet50 backbone and a prediction head with with a Kernel Feature branch and the mask feature branch.Both these branches are dynamically convolved to create and instance segmentation mask, which is then evaluated against the ground truth class labels using Focal loss as well as the ground truth masks using Dice Loss. The total loss weighs Dice Loss three times more than the Focal loss.
+
+## Results
+Not available yet 
