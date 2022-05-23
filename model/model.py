@@ -1,6 +1,6 @@
 import tensorflow as tf
 from model.layers.fpn import FPN
-from model.layers.head import PredictionHead
+# from model.layers.head import PredictionHead
 from model.layers.solov2head import SOLOV2Head 
 from model.layers.mask_head import MaskFeatHead
 assert tf.__version__.startswith('2')
